@@ -9,9 +9,12 @@ print(f"Description: {client.agent_card.description}")
 print(f"Skills: {[skill.name for skill in client.agent_card.skills]}")
 
 #Send a greeting
-response = client.ask('Hello there! My name is Alice')
+request = 'Hello there! My name is Alice'
+print(request)
+response = client.ask(request)
 print(f"Response: {response}")
 
 #Send another message
 response = client.ask("What can you do?")
+print("What can you do?")
 print(f"Response: {response}")
