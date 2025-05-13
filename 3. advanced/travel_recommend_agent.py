@@ -2,6 +2,7 @@
 from python_a2a import A2AServer, skill, agent, run_server, A2AClient
 from python_a2a import TaskStatus, TaskState
 import json
+import re
 
 @agent(
     name="Travel Advisor",
@@ -49,14 +50,17 @@ class TravelAgent(A2AServer):
         destinations = []
         for dest in self.destinations.keys():
             try:
-                weather = eval(self.weather_client.ask(f"What's the weather in {dest}?"))
-                destinations.append({
-                    "name": dest,
-                    "weather": weather,
-                    "activities": self.destinations[dest]["activities"]
-                })
+                _weather = self.weather_client.ask(f"What's the weather in {dest}?")
+                weather = self.parse_weather(_weather)
+                if weather is not None:
+                    destinations.append({
+                        "name": dest,
+                        "weather": weather,
+                        "activities": self.destinations[dest]["activities"]
+                    })
             except:
                 # Skip if we can't get weather
+                print("except")
                 continue
 
         # Filter by weather preference
@@ -86,6 +90,21 @@ class TravelAgent(A2AServer):
         else:
             return "No destinations match your preferences."
 
+    def parse_weather(self, sentence):
+        pattern = r"(\d+)°F,\s*(\w+),\s*(\d+)% humidity"
+        match = re.search(pattern, sentence)
+        if match:
+            temp = int(match.group(1))
+            weather = match.group(2)
+            humidity = int(match.group(3))
+            return {
+                'temp': temp,
+                'condition': weather,
+                'humidity': humidity
+            }
+        else:
+            return None
+        
     def handle_task(self, task):
         # Extract message text
         message_data = task.message or {}
@@ -105,19 +124,23 @@ class TravelAgent(A2AServer):
             weather_pref = "cool"
         elif "moderate" in text.lower() or "mild" in text.lower():
             weather_pref = "moderate"
+            
+        print(weather_pref);
 
         # Check for activities
-        common_activities = ["beach", "museum", "food", "shopping", "nature", "cruise", "show"]
+        print(text.lower())
+        common_activities = ["beach", "museums", "food", "shopping", "nature", "cruise", "show"]
         for activity in common_activities:
             if activity in text.lower():
                 activity_pref = activity
                 break
-
+        print(activity_pref)
+        
         # Generate recommendations if preferences found
         if weather_pref:
             try:
                 recommendations = self.recommend_destination(weather_pref, activity_pref)
-
+                print(recommendations)
                 if isinstance(recommendations, str):
                     response_text = recommendations
                 else:

@@ -30,6 +30,7 @@ class AssistantAgent(A2AServer):
             response_text = self.weather_client.ask(text)
         elif "recommend" in text.lower() or "suggest" in text.lower() or "destination" in text.lower() or "where should" in text.lower():
             # Route to travel agent
+            print(text)
             response_text = self.travel_client.ask(text)
         elif text.lower() in ["hi", "hello", "hey"]:
             # Greeting
